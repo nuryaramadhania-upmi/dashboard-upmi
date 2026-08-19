@@ -300,46 +300,75 @@ export default function MonitoringPage() {
 
     const ids = Array.from(dirtyIds);
 
-    const results = await Promise.all(
-      ids.map(async (id) => {
-        const value = overrides[id];
+    const rowsToSave = ids
+      .map((id) => {
+        const document = effectiveDocuments.find(
+          (item) => item.id === id
+        );
 
-        if (!value) return null;
+        if (!document) return null;
 
-        const { error } =
-          await supabase
-            .from("documents")
-            .update({
-              status: value.status,
-              progress: value.progress,
-              updated_at: new Date().toISOString(),
-            })
-            .eq("id", id);
-
-        return { id, error };
+        return {
+          id: document.id,
+          kode: String(document.kode),
+          unit: document.unit,
+          instrumen: document.instrumen,
+          kriteria: document.kriteria,
+          sub_kriteria: document.subKriteria,
+          komponen: document.komponen,
+          status: document.status,
+          progress: document.progress,
+          updated_at: new Date().toISOString(),
+        };
       })
-    );
+      .filter(
+        (
+          row
+        ): row is NonNullable<typeof row> =>
+          row !== null
+      );
 
-    const failed = results.filter(
-      (result) => result?.error
-    );
+    if (rowsToSave.length === 0) {
+      setErrorMessage(
+        "Tidak ada data yang dapat disimpan."
+      );
+      setSaving(false);
+      return;
+    }
 
-    if (failed.length > 0) {
-      console.error(failed);
+    const { error } = await supabase
+      .from("documents")
+      .upsert(rowsToSave, {
+        onConflict: "id",
+      });
+
+    if (error) {
+      console.error(error);
 
       setErrorMessage(
-        `Gagal menyimpan ${failed.length} dokumen: ${
-          failed[0]?.error?.message ?? "Unknown error"
-        }`
+        `Gagal menyimpan perubahan: ${error.message}`
       );
 
       setSaving(false);
       return;
     }
 
+    const savedOverrides: OverrideMap = {
+      ...overrides,
+    };
+
+    rowsToSave.forEach((row) => {
+      savedOverrides[row.id] = {
+        status: row.status,
+        progress: row.progress,
+      };
+    });
+
+    setOverrides(savedOverrides);
+
     setDirtyIds(new Set());
     setSaveMessage(
-      `${ids.length} perubahan berhasil disimpan ke Supabase`
+      `${rowsToSave.length} perubahan berhasil disimpan ke Supabase`
     );
     setSaving(false);
 

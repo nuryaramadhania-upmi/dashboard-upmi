@@ -67,7 +67,11 @@ export default function DashboardPage() {
     useState("");
 
   useEffect(() => {
+    let active = true;
+
     async function loadMonitoringData() {
+      if (!active) return;
+
       setLoadingData(true);
       setErrorMessage("");
 
@@ -75,6 +79,8 @@ export default function DashboardPage() {
         await supabase
           .from("documents")
           .select("id,status,progress");
+
+      if (!active) return;
 
       if (error) {
         console.error(error);
@@ -106,16 +112,60 @@ export default function DashboardPage() {
       loadMonitoringData();
     };
 
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        loadMonitoringData();
+      }
+    };
+
     window.addEventListener(
       "focus",
       handleFocus
     );
 
+    document.addEventListener(
+      "visibilitychange",
+      handleVisibilityChange
+    );
+
+    const realtimeChannel = supabase
+      .channel("dashboard-documents-sync")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "documents",
+        },
+        () => {
+          loadMonitoringData();
+        }
+      )
+      .subscribe();
+
+    const refreshInterval = window.setInterval(
+      () => {
+        loadMonitoringData();
+      },
+      5000
+    );
+
     return () => {
+      active = false;
+
       window.removeEventListener(
         "focus",
         handleFocus
       );
+
+      document.removeEventListener(
+        "visibilitychange",
+        handleVisibilityChange
+      );
+
+      window.clearInterval(refreshInterval);
+
+      supabase.removeChannel(realtimeChannel);
     };
   }, []);
 
