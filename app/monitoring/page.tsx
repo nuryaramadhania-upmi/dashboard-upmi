@@ -5,8 +5,6 @@ import AppLayout from "@/components/layout/AppLayout";
 import { supabase } from "@/lib/supabase";
 import {
   allDocuments,
-  INSTRUMENTS,
-  instrumentsForUnit,
   PRODI,
   PT_NAME,
   type DocumentRecord,
@@ -219,21 +217,44 @@ export default function MonitoringPage() {
     };
   }, []);
 
-  const availableInstrumen = useMemo(() => {
-    if (selectedUnit === "Semua") {
-      return [
-        "Semua",
-        ...INSTRUMENTS,
-      ];
+  const availableInstrumen = [
+    "Semua",
+    `LED D3 — ${PRODI[0]}`,
+    `LED D3 — ${PRODI[1]}`,
+    `LED D4 — ${PRODI[2]}`,
+    `LKPS — ${PRODI[0]}`,
+    `LKPS — ${PRODI[1]}`,
+    `LKPS — ${PRODI[2]}`,
+    `LED PT — ${PT_NAME}`,
+    `LKPT — ${PT_NAME}`,
+  ];
+
+  const selectedInstrumenOption =
+    selectedInstrumen === "Semua"
+      ? "Semua"
+      : `${selectedInstrumen} — ${selectedUnit}`;
+
+  function changeInstrumenOption(
+    option: string
+  ) {
+    if (option === "Semua") {
+      setSelectedInstrumen("Semua");
+      setSelectedStatus("Semua");
+      return;
     }
 
-    return [
-      "Semua",
-      ...instrumentsForUnit(
-        selectedUnit
-      ),
-    ];
-  }, [selectedUnit]);
+    const separator = " — ";
+    const separatorIndex = option.indexOf(separator);
+
+    if (separatorIndex === -1) return;
+
+    const instrumen = option.slice(0, separatorIndex);
+    const unit = option.slice(separatorIndex + separator.length);
+
+    setSelectedUnit(unit);
+    setSelectedInstrumen(instrumen);
+    setSelectedStatus("Semua");
+  }
 
   const displayedDocuments = useMemo(() => {
     return effectiveDocuments.filter((doc) => {
@@ -607,19 +628,14 @@ export default function MonitoringPage() {
             <Select
               label="Pilih Instrumen"
               value={
-                selectedInstrumen
+                selectedInstrumenOption
               }
               options={
                 availableInstrumen
               }
-              onChange={(value) => {
-                setSelectedInstrumen(
-                  value
-                );
-                setSelectedStatus(
-                  "Semua"
-                );
-              }}
+              onChange={
+                changeInstrumenOption
+              }
             />
 
             <Select

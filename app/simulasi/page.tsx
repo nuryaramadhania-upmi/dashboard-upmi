@@ -6,8 +6,6 @@ import { supabase } from "@/lib/supabase";
 
 import {
   allDocuments,
-  INSTRUMENTS,
-  instrumentsForUnit,
   PRODI,
   PT_NAME,
   unique,
@@ -252,22 +250,44 @@ export default function SimulasiPage() {
      INSTRUMEN
   ============================== */
 
-  const instrumentOptions =
-    useMemo(() => {
-      if (selectedUnit === ALL) {
-        return [
-          ALL,
-          ...INSTRUMENTS,
-        ];
-      }
+  const instrumentOptions = [
+    ALL,
+    `LED D3 — ${PRODI[0]}`,
+    `LED D3 — ${PRODI[1]}`,
+    `LED D4 — ${PRODI[2]}`,
+    `LKPS — ${PRODI[0]}`,
+    `LKPS — ${PRODI[1]}`,
+    `LKPS — ${PRODI[2]}`,
+    `LED PT — ${PT_NAME}`,
+    `LKPT — ${PT_NAME}`,
+  ];
 
-      return [
-        ALL,
-        ...instrumentsForUnit(
-          selectedUnit
-        ),
-      ];
-    }, [selectedUnit]);
+  const selectedInstrumentOption =
+    selectedInstrument === ALL
+      ? ALL
+      : `${selectedInstrument} — ${selectedUnit}`;
+
+  function changeInstrumentOption(
+    option: string
+  ) {
+    if (option === ALL) {
+      setSelectedInstrument(ALL);
+      setSelectedCriteria(ALL);
+      return;
+    }
+
+    const separator = " — ";
+    const separatorIndex = option.indexOf(separator);
+
+    if (separatorIndex === -1) return;
+
+    const instrument = option.slice(0, separatorIndex);
+    const unit = option.slice(separatorIndex + separator.length);
+
+    setSelectedUnit(unit);
+    setSelectedInstrument(instrument);
+    setSelectedCriteria(ALL);
+  }
 
   /* ==============================
      DATA BERDASARKAN UNIT +
@@ -612,20 +632,14 @@ export default function SimulasiPage() {
             <Select
               label="Pilih Instrumen"
               value={
-                selectedInstrument
+                selectedInstrumentOption
               }
               options={
                 instrumentOptions
               }
-              onChange={(value) => {
-                setSelectedInstrument(
-                  value
-                );
-
-                setSelectedCriteria(
-                  ALL
-                );
-              }}
+              onChange={
+                changeInstrumentOption
+              }
             />
 
             <Select

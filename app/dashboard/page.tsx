@@ -6,7 +6,6 @@ import { supabase } from "@/lib/supabase";
 import {
   allDocuments,
   completionPercent,
-  INSTRUMENTS,
   instrumentLevel,
   instrumentsForUnit,
   PRODI,
@@ -45,7 +44,7 @@ const ALL_SUB = "Semua Sub Kriteria";
 const ALL_COMPONENTS = "Semua Komponen";
 
 const initialFilter: Filter = {
-  unit: ALL_UNITS,
+  unit: PRODI[0],
   view: "Progress per Kriteria",
   chart: "Histogram",
   instrument: "LED D3",
@@ -188,16 +187,22 @@ export default function DashboardPage() {
       return [PT_NAME];
     }
 
-    return [ALL_UNITS, ...PRODI];
+    return [...PRODI];
   }, [draft.instrument]);
 
-  const instrumentOptions = useMemo<string[]>(() => {
-    if (draft.unit === ALL_UNITS) {
-      return [...INSTRUMENTS];
-    }
+  const instrumentOptions = useMemo<string[]>(() => [
+    `LED D3 — ${PRODI[0]}`,
+    `LED D3 — ${PRODI[1]}`,
+    `LED D4 — ${PRODI[2]}`,
+    `LKPS — ${PRODI[0]}`,
+    `LKPS — ${PRODI[1]}`,
+    `LKPS — ${PRODI[2]}`,
+    `LED PT — ${PT_NAME}`,
+    `LKPT — ${PT_NAME}`,
+  ], []);
 
-    return instrumentsForUnit(draft.unit);
-  }, [draft.unit]);
+  const selectedInstrumentOption =
+    `${draft.instrument} — ${draft.unit}`;
 
   const hierarchyDocs = useMemo<DocumentRecord[]>(() => {
     return liveDocuments.filter((doc) => {
@@ -240,15 +245,14 @@ export default function DashboardPage() {
     ];
   }, [hierarchyDocs, draft.criteria, draft.subCriteria]);
 
-  function changeInstrument(instrument: string) {
-    const level = instrumentLevel(instrument);
-    let unit = draft.unit;
+  function changeInstrument(option: string) {
+    const separator = " — ";
+    const separatorIndex = option.indexOf(separator);
 
-    if (level === "PT") {
-      unit = PT_NAME;
-    } else if (unit === PT_NAME) {
-      unit = ALL_UNITS;
-    }
+    if (separatorIndex === -1) return;
+
+    const instrument = option.slice(0, separatorIndex);
+    const unit = option.slice(separatorIndex + separator.length);
 
     setDraft((prev) => ({
       ...prev,
@@ -442,7 +446,7 @@ export default function DashboardPage() {
             <SelectBox
               label="Pilih Instrumen"
               options={instrumentOptions}
-              value={draft.instrument}
+              value={selectedInstrumentOption}
               onChange={changeInstrument}
             />
 
