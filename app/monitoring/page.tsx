@@ -85,15 +85,62 @@ export default function MonitoringPage() {
       setLoadingData(true);
       setErrorMessage("");
 
-      const { data, error } =
+      const { data: existingData, error: readError } =
         await supabase
           .from("documents")
           .select("id,status,progress");
 
-      if (error) {
-        console.error(error);
+      if (readError) {
+        console.error(readError);
         setErrorMessage(
-          `Gagal membaca data Supabase: ${error.message}`
+          `Gagal membaca data Supabase: ${readError.message}`
+        );
+        setLoadingData(false);
+        return;
+      }
+
+      const existingById = new Map(
+        (existingData ?? []).map((row) => [
+          row.id,
+          {
+            status: row.status as StatusDokumen,
+            progress: Number(row.progress ?? 0),
+          },
+        ])
+      );
+
+      const ptRows = allDocuments
+        .filter(
+          (doc) =>
+            doc.instrumen === "LED PT" ||
+            doc.instrumen === "LKPT"
+        )
+        .map((doc) => {
+          const existing = existingById.get(doc.id);
+
+          return {
+            id: doc.id,
+            kode: String(doc.kode),
+            unit: doc.unit,
+            instrumen: doc.instrumen,
+            kriteria: doc.kriteria,
+            sub_kriteria: doc.subKriteria,
+            komponen: doc.komponen,
+            status: existing?.status ?? doc.status,
+            progress: existing?.progress ?? doc.progress,
+          };
+        });
+
+      const { error: syncError } = await supabase
+        .from("documents")
+        .upsert(ptRows, {
+          onConflict: "id",
+        });
+
+      if (syncError) {
+        console.error(syncError);
+        setErrorMessage(
+          `Gagal menyinkronkan data PT: ${syncError.message}`
         );
         setLoadingData(false);
         return;
@@ -101,11 +148,20 @@ export default function MonitoringPage() {
 
       const next: OverrideMap = {};
 
-      (data ?? []).forEach((row) => {
+      ptRows.forEach((row) => {
         next[row.id] = {
-          status: row.status as StatusDokumen,
-          progress: Number(row.progress ?? 0),
+          status: row.status,
+          progress: row.progress,
         };
+      });
+
+      (existingData ?? []).forEach((row) => {
+        if (!next[row.id]) {
+          next[row.id] = {
+            status: row.status as StatusDokumen,
+            progress: Number(row.progress ?? 0),
+          };
+        }
       });
 
       setOverrides(next);
