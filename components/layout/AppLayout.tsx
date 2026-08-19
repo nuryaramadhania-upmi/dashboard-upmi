@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Sidebar from "@/components/layout/Sidebar";
-
-const AUTH_KEY = "upmi-auth-role";
+import { supabase } from "@/lib/supabase";
 
 export default function AppLayout({
   children,
@@ -11,62 +10,66 @@ export default function AppLayout({
   children: React.ReactNode;
 }) {
   const [isAdmin, setIsAdmin] = useState(false);
+  const [loadingAuth, setLoadingAuth] = useState(true);
 
   useEffect(() => {
-    const refreshAuth = () => {
-      setIsAdmin(
-        localStorage.getItem(AUTH_KEY) === "admin"
-      );
+    let active = true;
+
+    async function loadAuth() {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!active) return;
+
+      setIsAdmin(Boolean(session));
+      setLoadingAuth(false);
+    }
+
+    loadAuth();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        if (!active) return;
+
+        setIsAdmin(Boolean(session));
+        setLoadingAuth(false);
+      }
+    );
+
+    const handleFocus = () => {
+      loadAuth();
     };
-
-    refreshAuth();
-
-    window.addEventListener(
-      "upmi-auth-changed",
-      refreshAuth
-    );
-
-    window.addEventListener(
-      "storage",
-      refreshAuth
-    );
 
     window.addEventListener(
       "focus",
-      refreshAuth
+      handleFocus
     );
 
     return () => {
-      window.removeEventListener(
-        "upmi-auth-changed",
-        refreshAuth
-      );
+      active = false;
 
-      window.removeEventListener(
-        "storage",
-        refreshAuth
-      );
+      subscription.unsubscribe();
 
       window.removeEventListener(
         "focus",
-        refreshAuth
+        handleFocus
       );
     };
   }, []);
 
   return (
     <div className="flex min-h-screen bg-slate-50">
-
       {/* SIDEBAR */}
       <Sidebar />
 
       {/* CONTENT */}
       <div className="flex min-h-screen min-w-0 flex-1 flex-col">
-
         {/* HEADER */}
         <header className="border-b border-slate-200 bg-white px-8 py-5">
           <div className="flex items-center justify-between gap-6">
-
             <div>
               <h1 className="text-2xl font-bold text-[#0b1f5c]">
                 Dashboard Monitoring Akreditasi & SPMI
@@ -78,8 +81,17 @@ export default function AppLayout({
             </div>
 
             <div className="text-right">
+              {loadingAuth ? (
+                <>
+                  <p className="font-bold text-slate-400">
+                    Memeriksa akses...
+                  </p>
 
-              {isAdmin ? (
+                  <p className="text-sm text-slate-400">
+                    Mohon tunggu
+                  </p>
+                </>
+              ) : isAdmin ? (
                 <>
                   <p className="font-bold text-[#0b1f5c]">
                     Admin UPMI
@@ -100,9 +112,7 @@ export default function AppLayout({
                   </p>
                 </>
               )}
-
             </div>
-
           </div>
         </header>
 
@@ -110,9 +120,7 @@ export default function AppLayout({
         <main className="min-w-0 flex-1 overflow-x-auto p-8">
           {children}
         </main>
-
       </div>
-
     </div>
   );
 }
