@@ -1,3 +1,56 @@
+import { ledPtComponents } from "./ledPerguruanTinggiComponents";
+import { lkptComponents } from "./lkptComponents";
+
+type ComponentData = {
+  kriteria: string;
+  subKriteria: string;
+  komponen: string;
+};
+
+const convertToInstrumentComponents = (data: ComponentData[]) => {
+  const grouped: Record<
+    string,
+    {
+      name: string;
+      criteria: Record<
+        string,
+        {
+          name: string;
+          indicators: string[];
+        }
+      >;
+    }
+  > = {};
+
+  data.forEach((item) => {
+    const componentName = item.kriteria || "Lainnya";
+    const criteriaName = item.subKriteria || componentName;
+
+    if (!grouped[componentName]) {
+      grouped[componentName] = {
+        name: componentName,
+        criteria: {},
+      };
+    }
+
+    if (!grouped[componentName].criteria[criteriaName]) {
+      grouped[componentName].criteria[criteriaName] = {
+        name: criteriaName,
+        indicators: [],
+      };
+    }
+
+    grouped[componentName].criteria[criteriaName].indicators.push(
+      item.komponen
+    );
+  });
+
+  return Object.values(grouped).map((component) => ({
+    name: component.name,
+    criteria: Object.values(component.criteria),
+  }));
+};
+
 export const instruments = [
   {
     name: "LED",
@@ -78,180 +131,13 @@ export const instruments = [
   {
     name: "LED PT",
     level: "PT",
-    components: [
-      {
-        name: "Diferensiasi Misi",
-        criteria: [
-          {
-            name: "Diferensiasi Misi",
-            indicators: [
-              "Visi, Misi, Tujuan, dan Strategi Perguruan Tinggi",
-            ],
-          },
-        ],
-      },
-      {
-        name: "Relevansi Pendidikan",
-        criteria: [
-          {
-            name: "Relevansi Pendidikan",
-            indicators: [
-              "Kebijakan Pendidikan",
-              "Kurikulum",
-              "Pelaksanaan Pembelajaran",
-            ],
-          },
-        ],
-      },
-      {
-        name: "Relevansi Penelitian",
-        criteria: [
-          {
-            name: "Relevansi Penelitian",
-            indicators: [
-              "Kebijakan Penelitian",
-              "Pelaksanaan Penelitian",
-              "Luaran Penelitian",
-            ],
-          },
-        ],
-      },
-      {
-        name: "Relevansi Pengabdian Kepada Masyarakat",
-        criteria: [
-          {
-            name: "Relevansi Pengabdian Kepada Masyarakat",
-            indicators: [
-              "Kebijakan PkM",
-              "Pelaksanaan PkM",
-              "Luaran PkM",
-            ],
-          },
-        ],
-      },
-      {
-        name: "Akuntabilitas",
-        criteria: [
-          {
-            name: "Akuntabilitas",
-            indicators: [
-              "Tata Pamong dan Tata Kelola",
-              "Pengelolaan Data dan Informasi",
-              "Akuntabilitas Pengelolaan Perguruan Tinggi",
-            ],
-          },
-        ],
-      },
-      {
-        name: "Budaya Mutu",
-        criteria: [
-          {
-            name: "Budaya Mutu",
-            indicators: [
-              "Perangkat SPMI",
-              "Implementasi PPEPP",
-              "Audit Mutu Internal",
-              "Tindak Lanjut Hasil Evaluasi",
-            ],
-          },
-        ],
-      },
-    ],
+    components: convertToInstrumentComponents(ledPtComponents),
   },
 
   {
     name: "LKPT",
     level: "PT",
-    components: [
-      {
-        name: "Diferensiasi Misi",
-        criteria: [
-          {
-            name: "Diferensiasi Misi",
-            indicators: [
-              "Tabel 1. Akreditasi Program Studi",
-              "Tabel 2. Sertifikasi Eksternal",
-              "Akreditasi Internasional Program Studi",
-            ],
-          },
-        ],
-      },
-
-      {
-        name: "Relevansi Pendidikan",
-        criteria: [
-          {
-            name: "Relevansi Pendidikan",
-            indicators: [
-              "Rasio Mahasiswa terhadap Dosen",
-              "Kecukupan Dosen Tetap",
-              "Kecukupan Dosen Tidak Tetap",
-              "Jabatan Akademik Dosen",
-              "Kelulusan Tepat Waktu",
-              "Waktu Tunggu Lulusan",
-              "Kepuasan Pengguna Lulusan",
-              "Prestasi Mahasiswa",
-              "Implementasi MBKM",
-            ],
-          },
-        ],
-      },
-
-      {
-        name: "Relevansi Penelitian",
-        criteria: [
-          {
-            name: "Relevansi Penelitian",
-            indicators: [
-              "Produktivitas Penelitian",
-              "Luaran Penelitian",
-              "Sitasi Artikel",
-              "Karya Dosen Terekognisi",
-            ],
-          },
-        ],
-      },
-
-      {
-        name: "Relevansi Pengabdian Kepada Masyarakat",
-        criteria: [
-          {
-            name: "Relevansi Pengabdian Kepada Masyarakat",
-            indicators: [
-              "Produktivitas Pengabdian kepada Masyarakat",
-              "Luaran Pengabdian kepada Masyarakat",
-            ],
-          },
-        ],
-      },
-
-      {
-        name: "Akuntabilitas",
-        criteria: [
-          {
-            name: "Akuntabilitas",
-            indicators: [
-              "Audit Eksternal Keuangan",
-              "Kepuasan Stakeholder",
-            ],
-          },
-        ],
-      },
-
-      {
-        name: "Budaya Mutu",
-        criteria: [
-          {
-            name: "Budaya Mutu",
-            indicators: [
-              "Implementasi SPMI",
-              "Audit Mutu Internal",
-              "Tindak Lanjut Hasil Audit",
-            ],
-          },
-        ],
-      },
-    ],
+    components: convertToInstrumentComponents(lkptComponents),
   },
 ];
 

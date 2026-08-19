@@ -1,6 +1,7 @@
 import { ledD3Components } from "./ledD3Components";
 import { ledD4Components } from "./ledD4Components";
 import { lkpsComponents } from "./lkpsComponents";
+import { ledPtComponents } from "./ledPerguruanTinggiComponents";
 import { lkptComponents } from "./lkptComponents";
 
 export type StatusDokumen =
@@ -64,112 +65,7 @@ export const PT_CRITERIA = [
 ] as const;
 
 /* =========================================================
-   LED PT
-========================================================= */
-
-const ledPtComponents: RawItem[] = [
-  {
-    id: 1,
-    kode: "1",
-    kriteria: "Diferensiasi Misi",
-    subKriteria: "VMTS",
-    komponen: "Kekhasan dan diferensiasi misi",
-    sumber: "LED PT",
-  },
-
-  {
-    id: 2,
-    kode: "2",
-    kriteria: "Relevansi Pendidikan",
-    subKriteria: "Pendidikan",
-    komponen: "Relevansi penyelenggaraan pendidikan",
-    sumber: "LED PT",
-  },
-
-  {
-    id: 3,
-    kode: "3",
-    kriteria: "Relevansi Penelitian",
-    subKriteria: "Penelitian",
-    komponen: "Relevansi penelitian perguruan tinggi",
-    sumber: "LED PT",
-  },
-
-  {
-    id: 4,
-    kode: "4",
-    kriteria: "Relevansi Pengabdian Kepada Masyarakat",
-    subKriteria: "Pengabdian kepada Masyarakat",
-    komponen: "Relevansi PkM perguruan tinggi",
-    sumber: "LED PT",
-  },
-
-  {
-    id: 5,
-    kode: "5",
-    kriteria: "Akuntabilitas",
-    subKriteria: "Tata Pamong dan Tata Kelola",
-    komponen: "Statuta dan Struktur Organisasi",
-    sumber: "LED PT",
-  },
-
-  {
-    id: 6,
-    kode: "6",
-    kriteria: "Akuntabilitas",
-    subKriteria: "Tata Pamong dan Tata Kelola",
-    komponen: "Sistem Tata Pamong",
-    sumber: "LED PT",
-  },
-
-  {
-    id: 7,
-    kode: "7",
-    kriteria: "Akuntabilitas",
-    subKriteria: "Tata Pamong dan Tata Kelola",
-    komponen: "Sistem Pengelolaan Data",
-    sumber: "LED PT",
-  },
-
-  {
-    id: 8,
-    kode: "8",
-    kriteria: "Budaya Mutu",
-    subKriteria: "SPMI Perguruan Tinggi",
-    komponen: "Perangkat SPMI",
-    sumber: "LED PT",
-  },
-
-  {
-    id: 9,
-    kode: "9",
-    kriteria: "Budaya Mutu",
-    subKriteria: "SPMI Perguruan Tinggi",
-    komponen: "Implementasi PPEPP",
-    sumber: "LED PT",
-  },
-
-  {
-    id: 10,
-    kode: "10",
-    kriteria: "Budaya Mutu",
-    subKriteria: "SPMI Perguruan Tinggi",
-    komponen: "Laporan Implementasi SPMI",
-    sumber: "LED PT",
-  },
-
-  {
-    id: 11,
-    kode: "11",
-    kriteria: "Budaya Mutu",
-    subKriteria: "SPMI Perguruan Tinggi",
-    komponen: "Pengakuan Mutu Akreditasi",
-    sumber: "LED PT",
-  },
-];
-
-/* =========================================================
-   STATUS DUMMY
+   STATUS DOKUMEN
 ========================================================= */
 
 const statusPattern: StatusDokumen[] = [
@@ -249,7 +145,7 @@ function makeDocuments(
 ========================================================= */
 
 export const allDocuments: DocumentRecord[] = [
-  /* D3 SPM */
+  /* LED D3 — D3 Survei dan Pemetaan */
   ...makeDocuments(
     ledD3Components,
     "LED D3",
@@ -258,7 +154,7 @@ export const allDocuments: DocumentRecord[] = [
     0
   ),
 
-  /* D3 Perawatan Mesin */
+  /* LED D3 — D3 Perawatan Mesin */
   ...makeDocuments(
     ledD3Components,
     "LED D3",
@@ -267,7 +163,7 @@ export const allDocuments: DocumentRecord[] = [
     1
   ),
 
-  /* D4 TRL */
+  /* LED D4 — D4 Teknologi Rekayasa Logistik */
   ...makeDocuments(
     ledD4Components,
     "LED D4",
@@ -276,7 +172,7 @@ export const allDocuments: DocumentRecord[] = [
     2
   ),
 
-  /* LKPS D3 SPM */
+  /* LKPS — D3 Survei dan Pemetaan */
   ...makeDocuments(
     lkpsComponents,
     "LKPS",
@@ -285,7 +181,7 @@ export const allDocuments: DocumentRecord[] = [
     3
   ),
 
-  /* LKPS D3 PM */
+  /* LKPS — D3 Perawatan Mesin */
   ...makeDocuments(
     lkpsComponents,
     "LKPS",
@@ -294,7 +190,7 @@ export const allDocuments: DocumentRecord[] = [
     4
   ),
 
-  /* LKPS D4 TRL */
+  /* LKPS — D4 Teknologi Rekayasa Logistik */
   ...makeDocuments(
     lkpsComponents,
     "LKPS",
@@ -303,7 +199,7 @@ export const allDocuments: DocumentRecord[] = [
     0
   ),
 
-  /* LED PT */
+  /* LED PT — 39 BUTIR */
   ...makeDocuments(
     ledPtComponents,
     "LED PT",
@@ -312,9 +208,13 @@ export const allDocuments: DocumentRecord[] = [
     1
   ),
 
-  /* LKPT */
+  /* LKPT — 24 TABEL */
   ...makeDocuments(
-    lkptComponents,
+    lkptComponents.map((item) => ({
+      ...item,
+      kriteria: `Tabel ${item.kode}`,
+      subKriteria: item.komponen,
+    })),
     "LKPT",
     PT_NAME,
     "PT",
