@@ -83,6 +83,10 @@ export default function MonitoringPage() {
       setLoadingData(true);
       setErrorMessage("");
 
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
       const { data: existingData, error: readError } =
         await supabase
           .from("documents")
@@ -129,35 +133,39 @@ export default function MonitoringPage() {
           };
         });
 
-      const { error: syncError } = await supabase
-        .from("documents")
-        .upsert(ptRows, {
-          onConflict: "id",
-        });
+      // Viewer hanya membaca. Sinkronisasi/upsert hanya dilakukan admin.
+      if (session) {
+        const { error: syncError } = await supabase
+          .from("documents")
+          .upsert(ptRows, {
+            onConflict: "id",
+          });
 
-      if (syncError) {
-        console.error(syncError);
-        setErrorMessage(
-          `Gagal menyinkronkan data PT: ${syncError.message}`
-        );
-        setLoadingData(false);
-        return;
+        if (syncError) {
+          console.error(syncError);
+          setErrorMessage(
+            `Gagal menyinkronkan data PT: ${syncError.message}`
+          );
+          setLoadingData(false);
+          return;
+        }
       }
 
       const next: OverrideMap = {};
 
-      ptRows.forEach((row) => {
+      (existingData ?? []).forEach((row) => {
         next[row.id] = {
-          status: row.status,
-          progress: row.progress,
+          status: row.status as StatusDokumen,
+          progress: Number(row.progress ?? 0),
         };
       });
 
-      (existingData ?? []).forEach((row) => {
+      // Fallback lokal jika ada data PT yang belum ada di database.
+      ptRows.forEach((row) => {
         if (!next[row.id]) {
           next[row.id] = {
-            status: row.status as StatusDokumen,
-            progress: Number(row.progress ?? 0),
+            status: row.status,
+            progress: row.progress,
           };
         }
       });
