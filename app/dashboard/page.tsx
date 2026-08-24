@@ -309,6 +309,19 @@ export default function DashboardPage() {
     return makeChartData(filteredDocs, applied);
   }, [filteredDocs, applied]);
 
+  // Rata-rata kesiapan harus mengikuti kelompok yang sedang ditampilkan
+  // pada grafik. Math.floor dipakai agar 76,67% ditampilkan sebagai 76%.
+  const chartAverage = useMemo(() => {
+    if (!chartData.length) return 0;
+
+    const totalProgress = chartData.reduce(
+      (total, item) => total + Number(item.value || 0),
+      0
+    );
+
+    return Math.floor(totalProgress / chartData.length);
+  }, [chartData]);
+
   const summary = useMemo(() => {
     const total = filteredDocs.length;
     const lengkap = filteredDocs.filter(
@@ -320,9 +333,9 @@ export default function DashboardPage() {
       total,
       lengkap,
       kurang,
-      kesiapan: completionPercent(filteredDocs),
+      kesiapan: chartAverage,
     };
-  }, [filteredDocs]);
+  }, [filteredDocs, chartAverage]);
 
   const cards = [
     {
@@ -743,7 +756,7 @@ function Chart({ data, type }: { data: ChartItem[]; type: string }) {
 
   if (type === "Pie Chart") {
     const totalValue = data.reduce((sum, item) => sum + item.value, 0);
-    const averageValue = Math.round(
+    const averageValue = Math.floor(
       data.reduce((sum, item) => sum + item.value, 0) / data.length
     );
 
